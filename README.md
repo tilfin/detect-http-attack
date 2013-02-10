@@ -42,7 +42,9 @@ Uses Labeled Tab-separated Values (LTSV) format (http://ltsv.org/)
 
 ### Settings and Customize output template:
 
-Edit the default configuration file (detect-http-attack.conf)
+Edit the default configuration file (detect_http_attack.conf) or specify another file.
+
+    $ ./detect-http-attack.rb -f another.conf < access_log
 
 ### Usage:
 

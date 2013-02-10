@@ -54,9 +54,10 @@ Edit the default configuration file (detect_http_attack.conf) or specify another
         -f CONFFILE                      Specify configuration file
 
 
-## Example
+Example
+-------
 
-Attack detected.
+Detected attack result.
 
     $ ./detect_http_attack.rb < /var/log/nginx/access.log
     64.128.192.255   15   Mozilla/3.0 (windows)

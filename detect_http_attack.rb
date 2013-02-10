@@ -99,9 +99,10 @@ class LtsvLogParser < LogParser
       values[name.to_sym] = value
     }
 
-    method, path = values[:req].split(' ')
+    method, path, version = values[:req].split(' ')
     values[:method] = method
     values[:path] = path
+    values[:version] = version
     values[:date] = parse_datetime(values[:time])
 
     values
@@ -144,16 +145,18 @@ end
 
 class Template
 
-  def initialize(head, body, foot)
+  def initialize(head, body, foot, serr)
     @re_field = Regexp.new("\\$[a-z]+")
 
     h = head || "$host\\t$count\\t$ua"
     b = body || "$date\\t$path\\t$referer"
     f = foot || ""
+    s = serr || "$host\\t$count\\t$ua\\n$date\\t$path\\t$referer"
 
     @head = parse_value(h)
     @body = parse_value(b)
     @foot = parse_value(f)
+    @serr = parse_value(s)
   end
 
   def  parse_value(value)
@@ -182,20 +185,24 @@ class Template
     vals
   end
 
-  def print_head(ops, count, row)
+  def print_head(count, row)
     if @head
-      print_row(@head, ops, count, row)
+      print_row(@head, STDOUT, count, row)
     end
   end
 
-  def print_body(ops, row)
-    print_row(@body, ops, "", row)
+  def print_body(row)
+    print_row(@body, STDOUT, "", row)
   end
 
-  def print_foot(ops, count, row)
+  def print_foot(count, row)
     if @foot
-      print_row(@foot, ops, count, row)
+      print_row(@foot, STDOUT, count, row)
     end
+  end
+
+  def print_serr(count, row)
+    print_row(@serr, STDERR, count, row)
   end
 
   def print_row(templ, ops, count, row)
@@ -221,6 +228,7 @@ class DetectionProcessor
 
   attr :interval_threshold, true
   attr :sequence_threshold, true
+  attr :notify,  true
   attr :exc_hosts, true
   attr :exc_ua, true
   attr :exc_path,  true
@@ -234,6 +242,8 @@ class DetectionProcessor
     @exc_hosts = []
     @exc_ua = nil
     @exc_path = nil
+
+    @realtime_notify = false
 
     @pre_access_map = Hash.new
     @ops = STDOUT
@@ -254,6 +264,10 @@ class DetectionProcessor
       if (date_ts - ts) <= @interval_threshold
         al.push(row)
         @pre_access_map.store(host, [date_ts, al])
+
+        if @notify and al.count >= @sequence_threshold
+          @template.print_serr(al.count, row)
+        end
       else
         if al.count >= @sequence_threshold
           print_access(host, al)
@@ -277,13 +291,13 @@ class DetectionProcessor
   def print_access(host, al)
     fl = al[0]
 
-    @template.print_head(@ops, al.count, fl)
+    @template.print_head(al.count, fl)
 
     al.each do |row|
-      @template.print_body(@ops, row)
+      @template.print_body(row)
     end
 
-    @template.print_foot(@ops, al.count, fl)
+    @template.print_foot(al.count, fl)
   end
 end
 
@@ -292,12 +306,14 @@ end
 def get_opts
   # Settting from Arguments 
 
-  opts = { :parser => 'combined', :max_interval => 3, :min_seq => 8 }
+  opts = { :parser => 'combined', :max_interval => 3, :min_seq => 8, :notify => false }
 
   opt = OptionParser.new
   
   opt.on('-ltsv', 'Log type is LTSV') { |v| opts[:parser] = "ltsv" }
   
+  opt.on('-n', 'notify when detecting attack') { |v| opts[:notify] = true }
+
   opt.on('-s COUNT', 'Specify minimum sequential count') do |count|
     opts[:min_seq] = count.to_i
   end
@@ -327,11 +343,12 @@ def main
 
   conf = Configuration.new(opts[:conf_file])
 
-  template = Template.new(conf.get(:head), conf.get(:body), conf.get(:foot))
+  template = Template.new(conf.get(:head), conf.get(:body), conf.get(:foot), conf.get(:serr))
 
   processor = DetectionProcessor.new(template)
   processor.interval_threshold = opts[:max_interval]
   processor.sequence_threshold = opts[:min_seq]
+  processor.notify = opts[:notify]
 
   exc_hosts = conf.get(:exc_hosts)
   if exc_hosts
@@ -340,7 +357,7 @@ def main
   
   exc_ua = conf.get(:exc_ua_match)
   if exc_ua
-    processor.exc_ua = Regexp.new(exc_ua, "i")
+    processor.exc_ua = Regexp.new(exc_ua, Regexp::IGNORECASE)
   end
 
   exc_path = conf.get(:exc_path_match)

@@ -6,7 +6,7 @@
 # by analyzing the sequential access parsing combined log or LTSV log.
 #
 # Author::    Toshimitsu Takahashi (mailto:tilfin@gmail.com)
-# Copyright:: (c) 2013 Toshimtisu Takahashi
+# Copyright:: (c) 2013 Toshimitsu Takahashi
 # License::   MIT License
 #
 
@@ -30,12 +30,13 @@ class CombinedLogParser < LogParser
     m = parse_line(row)
     return nil if m.length == 0
 
-    host, ident, user, dt_s, req, status, size, referer, ua = m
-
+    host, ident, user, time, req, status, size, referer, ua = m
     method, path = req.split(' ')
 
     { :host => host,
-      :date => parse_datetime(dt_s),
+      :time => time,
+      :date => parse_datetime(time),
+      :req  => req,
       :method => method,
       :path => path,
       :status => status,
@@ -113,31 +114,138 @@ class LtsvLogParser < LogParser
 end
 
 
+class Configuration
+  
+  def initialize(file_path=nil)
+    conf_file = file_path || File.dirname(__FILE__) + "/detect_http_attack.conf"
+    return unless File.exists?(conf_file)
+
+    @sets = Hash.new
+
+    open(conf_file, "r") do |f|
+      f.each {|line|
+        next if line.start_with?("#")
+
+        name, value = line.split("=", 2)
+        next unless value
+
+        value = eval %Q{"#{value}"}
+        @sets[name.to_sym] = value.chomp
+      }
+    end
+  end
+
+  def get(field)
+    @sets[field]
+  end
+
+end
+
+
+class Template
+
+  def initialize(head, body, foot)
+    @re_field = Regexp.new("\\$[a-z]+")
+
+    h = head || "$host\\t$count\\t$ua"
+    b = body || "$date\\t$path\\t$referer"
+    f = foot || ""
+
+    @head = parse_value(h)
+    @body = parse_value(b)
+    @foot = parse_value(f)
+  end
+
+  def  parse_value(value)
+    vals = Array.new
+    str = value
+
+    begin  
+      pos = @re_field =~ str
+      if pos
+        if pos > 0
+          vals.push(str[0, pos])
+        end
+
+        fld = Regexp.last_match(0)
+        vals.push(fld[1..-1].to_sym)
+
+        pos += fld.length
+        str = str[pos..-1]
+      end
+    end while pos
+
+    if str
+      vals.push(str)
+    end
+
+    vals
+  end
+
+  def print_head(ops, count, row)
+    if @head
+      print_row(@head, ops, count, row)
+    end
+  end
+
+  def print_body(ops, row)
+    print_row(@body, ops, "", row)
+  end
+
+  def print_foot(ops, count, row)
+    if @foot
+      print_row(@foot, ops, count, row)
+    end
+  end
+
+  def print_row(templ, ops, count, row)
+    templ.each do |val|
+      if val.instance_of?(String)
+        ops.print val
+        next
+      end
+
+      if val == :count
+        ops.print count.to_s
+      else
+        v = row[val]
+        ops.print(v ? v.to_s : "")
+      end
+    end
+  end
+
+end
+
+
 class DetectionProcessor
 
   attr :interval_threshold, true
   attr :sequence_threshold, true
-  attr :excluded_hosts,  true
-  attr :excluded_ua,  true
+  attr :exc_hosts, true
+  attr :exc_ua, true
+  attr :exc_path,  true
 
-  def initialize
+  def initialize(template)
+    @template = template
+
     @interval_threshold = 3
     @sequence_threshold = 8
-    @excluded_hosts = []
-    @excluded_ua = nil
 
-    @url_path_filter = /\.(css|js|jpg|gif|html|ico|png)$/
+    @exc_hosts = []
+    @exc_ua = nil
+    @exc_path = nil
+
     @pre_access_map = Hash.new
     @ops = STDOUT
   end
 
   def proc(row)
     host = row[:host]
-    return if @excluded_hosts.index(host)
-    return if @excluded_ua and @excluded_ua.match(row[:ua])
+    return if @exc_hosts.index(host)
+    return if @exc_ua and @exc_ua.match(row[:ua])
 
     path, query = row[:path].split("?")
-    return if @url_path_filter.match(path)
+    return if @exc_path and @exc_path.match(path)
 
     date_ts = row[:date].to_time.to_i
 
@@ -167,15 +275,15 @@ class DetectionProcessor
   end
 
   def print_access(host, al)
-    ua = al[0][:ua]
+    fl = al[0]
 
-    @ops.puts "#" + host + "\t" + al.count.to_s + "\t" + ua
+    @template.print_head(@ops, al.count, fl)
 
     al.each do |row|
-      @ops.puts row[:date].to_s + "\t" + row[:status] + "\t" + row[:path] + "\t" + row[:referer]
+      @template.print_body(@ops, row)
     end
-   
-    @ops.puts ""
+
+    @template.print_foot(@ops, al.count, fl)
   end
 end
 
@@ -198,43 +306,46 @@ def get_opts
     opts[:max_interval] = sec.to_i
   end
   
-  opt.on('-h EXCLUDEDHOSTS',
-         'Specify exclueded hosts separated by comma') do |hosts|
-    opts[:ex_hosts] = hosts.split(',') 
-  end
-  
-  opt.on('-u EXCLUDEDAGENTS',
-         'Specify excluded user-agents separated by comma') do |ua|
-    opts[:ex_ua] = ua.split(',')
+  opt.on('-f CONFFILE',
+         'Specify configuration file') do |path|
+    opts[:conf_file] = path
   end
   
   opt.parse!(ARGV)
+
+  opts
+end 
   
+def main
+  opts = get_opts
+
   if opts[:parser] == "ltsv"
     parser = LtsvLogParser.new
   else
     parser = CombinedLogParser.new
   end
 
-  opts
-end
-  
-  
-def main
-  opts = get_opts
+  conf = Configuration.new(opts[:conf_file])
 
-  processor = DetectionProcessor.new
+  template = Template.new(conf.get(:head), conf.get(:body), conf.get(:foot))
+
+  processor = DetectionProcessor.new(template)
   processor.interval_threshold = opts[:max_interval]
   processor.sequence_threshold = opts[:min_seq]
-  
-  ex_hosts = opts[:ex_hosts]
-  if ex_hosts
-    processor.excluded_hosts = ex_hosts
+
+  exc_hosts = conf.get(:exc_hosts)
+  if exc_hosts
+    processor.exc_hosts = exc_hosts.split(",")
   end
   
-  ex_ua = opts[:ex_ua]
-  if ex_ua
-    processor.excluded_ua = Regexp.new(ex_ua.join("|"))
+  exc_ua = conf.get(:exc_ua_match)
+  if exc_ua
+    processor.exc_ua = Regexp.new(exc_ua, "i")
+  end
+
+  exc_path = conf.get(:exc_path_match)
+  if exc_path
+    processor.exc_path = Regexp.new(exc_path)
   end
 
   #

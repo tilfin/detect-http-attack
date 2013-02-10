@@ -54,7 +54,7 @@ Edit the default configuration file (detect_http_attack.conf) or specify another
         -f CONFFILE                      Specify configuration file
 
 
-### Example:
+## Example
 
 Attack detected.
 

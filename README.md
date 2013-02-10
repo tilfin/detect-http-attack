@@ -1,5 +1,8 @@
-detect-http-attack
+Detect HTTP attack
 ==================
+
+Description
+-----------
 
 It is a detecting attack tool for HTTP server such as Apache and Nginx.
 Analyzing access logs, output formated text as results.
@@ -10,8 +13,8 @@ Prerequisites
 -------------
 Ruby 1.9.x
 
-Usage
------
+Quick Start
+-----------
 
 ### Analyze access log:
 
@@ -37,9 +40,9 @@ Uses Labeled Tab-separated Values (LTSV) format (http://ltsv.org/)
 
     $ ./detect-http-attack.rb -ltsv < /var/log/apache/access_ltsv_log
 
-### Settings and Customize:
+### Settings and Customize output template:
 
-edits detect-http-attack.conf
+Edit the default configuration file (detect-http-attack.conf)
 
 ### Usage:
 

@@ -34,9 +34,9 @@ Notifying attacks whenever detecting them to STDERR, all results are output to a
 
     $ tail -f /var/log/nginx/access.log | ./detect-http-attack.rb -n > attack.log
 
-### LTSV Format adapted:
+### Supports LTSV Format:
 
-Uses Labeled Tab-separated Values (LTSV) format (http://ltsv.org/)
+Handle logs of Labeled Tab-separated Values (LTSV) format (http://ltsv.org/)
 
     $ ./detect-http-attack.rb -ltsv < /var/log/apache/access_ltsv_log
 

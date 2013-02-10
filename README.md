@@ -1,9 +1,6 @@
 Detect HTTP attack
 ==================
 
-Description
------------
-
 It is a detecting attack tool for HTTP server such as Apache and Nginx.
 Analyzing access logs, output formated text as results.
 
@@ -56,3 +53,25 @@ Edit the default configuration file (detect_http_attack.conf) or specify another
         -i SECONDS                       Specify maximum interval seconds
         -f CONFFILE                      Specify configuration file
 
+
+### Example:
+
+Attack detected.
+
+    $ ./detect_http_attack.rb < /var/log/nginx/access.log
+    64.128.192.255   15   Mozilla/3.0 (windows)
+    2012-12-20T08:25:28+09:00       200     /admin/phpmyadmin/scripts/setup.php     -
+    2012-12-20T08:25:28+09:00       200     /wp-content/plugins/wp-phpmyadmin/phpmyadmin/scripts/setup.php  -
+    2012-12-20T08:25:28+09:00       200     /mysql/scripts/setup.php        -
+    2012-12-20T08:25:28+09:00       200     /phpmyadmin2/scripts/setup.php  -
+    2012-12-20T08:25:28+09:00       200     /pma/scripts/setup.php  -
+    2012-12-20T08:25:28+09:00       200     /phpmyadmin/scripts/setup.php   -
+    2012-12-20T08:25:28+09:00       200     /myadmin/scripts/setup.php      -
+    2012-12-20T08:25:28+09:00       200     /phpMyAdmin/scripts/setup.php   -
+    2012-12-20T08:25:28+09:00       200     /admin/scripts/setup.php        -
+    2012-12-20T08:25:28+09:00       200     /wordpress/wp-content/plugins/wp-phpmyadmin/phpmyadmin/scripts/setup.php        -
+    2012-12-20T08:25:28+09:00       200     /blog/wp-content/plugins/wp-phpmyadmin/phpmyadmin/scripts/setup.php     -
+    2012-12-20T08:25:28+09:00       200     /sql/scripts/setup.php  -
+    2012-12-20T08:25:28+09:00       200     /blog/phpMyAdmin/scripts/setup.php      -
+    2012-12-20T08:25:28+09:00       200     /wp/wp-content/plugins/wp-phpmyadmin/phpmyadmin/scripts/setup.php       -
+    2012-12-20T08:25:28+09:00       200     /scripts/setup.php      -

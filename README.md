@@ -10,6 +10,12 @@ Prerequisites
 -------------
 Ruby 1.9.x
 
+Installation
+------------
+
+    $ git clone https://github.com/tilfin/detect-http-attack.git
+    $ cd detect-http-attack
+
 Quick Start
 -----------
 

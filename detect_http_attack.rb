@@ -254,9 +254,12 @@ class DetectionProcessor
     return if @exc_hosts.index(host)
     return if @exc_ua and @exc_ua.match(row[:ua])
 
-    path, query = row[:path].split("?")
-    return if @exc_path and @exc_path.match(path)
-
+    path = row[:path]
+    if path
+      path, query = path.split("?")
+      return if @exc_path and @exc_path.match(path)
+    end
+ 
     date_ts = row[:date].to_time.to_i
 
     if @pre_access_map.include?(host)
@@ -368,11 +371,14 @@ def main
   #
   # Parsing log line, detect attacks
   #
-  while line = STDIN.gets
-    row = parser.parse(line)
-    next unless row
-  
-    processor.proc(row)
+  begin
+    while line = STDIN.gets
+      row = parser.parse(line)
+      next unless row
+    
+      processor.proc(row)
+    end
+  rescue Interrupt
   end
     
   processor.finalize

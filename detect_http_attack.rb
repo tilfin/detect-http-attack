@@ -151,7 +151,7 @@ end
 
 class Template
 
-  def initialize(head, body, foot, serr)
+  def initialize(head, body, foot, serr, date_format)
     @re_field = Regexp.new("\\$[a-z]+")
 
     h = head || "$host\\t$count\\t$ua"
@@ -163,6 +163,8 @@ class Template
     @body = parse_value(b)
     @foot = parse_value(f)
     @serr = parse_value(s)
+
+    @date_format = date_format
   end
 
   def  parse_value(value)
@@ -222,7 +224,13 @@ class Template
         ops.print count.to_s
       else
         v = row[val]
-        ops.print(v ? v.to_s : "")
+        next unless v
+
+        if val == :date and @date_format
+          ops.print v.strftime(@date_format)
+        else
+          ops.print v.to_s
+        end
       end
     end
   end
@@ -352,7 +360,8 @@ def main
 
   conf = Configuration.new(opts[:conf_file])
 
-  template = Template.new(conf.get(:head), conf.get(:body), conf.get(:foot), conf.get(:serr))
+  template = Template.new(conf.get(:head), conf.get(:body), conf.get(:foot), conf.get(:serr),
+                          conf.get(:date_format))
 
   processor = DetectionProcessor.new(template)
   processor.interval_threshold = opts[:max_interval]

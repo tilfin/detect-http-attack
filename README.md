@@ -66,7 +66,7 @@ Example
 Detected attack result.
 
     $ ./detect_http_attack.rb < /var/log/nginx/access.log
-    64.128.192.255   15   Mozilla/3.0 (windows)
+    10.128.192.255   15   Mozilla/3.0 (windows)
     2012-12-20T08:25:28+09:00       200     /admin/phpmyadmin/scripts/setup.php     -
     2012-12-20T08:25:28+09:00       200     /wp-content/plugins/wp-phpmyadmin/phpmyadmin/scripts/setup.php  -
     2012-12-20T08:25:28+09:00       200     /mysql/scripts/setup.php        -

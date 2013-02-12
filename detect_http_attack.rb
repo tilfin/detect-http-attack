@@ -57,25 +57,31 @@ class CombinedLogParser < LogParser
       first_char = str[0]
 
       if first_char == '"'
+        # in double quotes
         start_pos = 1
-        last_char = '"'
+        end_pos   = 1
+
+        begin
+          end_pos = str.index('"', end_pos+1)
+        end while end_pos and str[end_pos-1] == '\\'
+
       elsif first_char == '['
+        # in square brackets
         start_pos = 1
-        last_char = ']'
+        end_pos = str.index(']', 1)
+
       else
         start_pos = 0
-        last_char = ' '
+        end_pos = str.index(' ', 1)
       end
 
-      end_pos = str.index(last_char, 1)
-  
       unless end_pos
+        # Last field
         values.push str[start_pos..-1]
         break
       end
 
       values.push str[start_pos..end_pos-1]
-
       end_pos += start_pos
       str = str[end_pos+1 .. -1]
     end

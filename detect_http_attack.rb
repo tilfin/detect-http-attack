@@ -14,6 +14,9 @@ require 'date'
 require 'optparse'
 
 
+module DetectHttpAttack
+
+
 class LogParser
 
   def parse(line)
@@ -195,22 +198,22 @@ class Template
 
   def print_head(count, row)
     if @head
-      print_row(@head, STDOUT, count, row)
+      print_row(@head, $stdout, count, row)
     end
   end
 
   def print_body(row)
-    print_row(@body, STDOUT, "", row)
+    print_row(@body, $stdout, "", row)
   end
 
   def print_foot(count, row)
     if @foot
-      print_row(@foot, STDOUT, count, row)
+      print_row(@foot, $stdout, count, row)
     end
   end
 
   def print_serr(count, row)
-    print_row(@serr, STDERR, count, row)
+    print_row(@serr, $stderr, count, row)
   end
 
   def print_row(templ, ops, count, row)
@@ -260,7 +263,7 @@ class DetectionProcessor
     @realtime_notify = false
 
     @pre_access_map = Hash.new
-    @ops = STDOUT
+    @ops = $stdout
   end
 
   def proc(row)
@@ -319,8 +322,7 @@ class DetectionProcessor
 end
 
 
-
-def get_opts
+def self.get_opts(argv)
   # Settting from Arguments 
 
   opts = { :parser => 'combined', :max_interval => 3, :min_seq => 8, :notify => false }
@@ -344,13 +346,14 @@ def get_opts
     opts[:conf_file] = path
   end
   
-  opt.parse!(ARGV)
+  opt.parse!(argv)
 
   opts
-end 
-  
-def main
-  opts = get_opts
+end
+
+
+def self.main(argv)
+  opts = get_opts(argv)
 
   if opts[:parser] == "ltsv"
     parser = LtsvLogParser.new
@@ -387,7 +390,10 @@ def main
   # Parsing log line, detect attacks
   #
   begin
-    while line = STDIN.gets
+    while line = $stdin.gets
+      File.open("/tmp/filelog", "w+") do |f|
+        f.write("LINE:  #{line}")
+      end
       row = parser.parse(line)
       next unless row
     
@@ -399,5 +405,11 @@ def main
   processor.finalize
 end
 
-main
 
+end
+
+
+case $0
+when __FILE__
+  DetectHttpAttack.main ARGV
+end

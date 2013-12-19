@@ -1,0 +1,4 @@
+host:10.0.0.1	ident:-	user:-	time:[18/Dec/2013:06:25:00 +0900]	req:GET /path1 HTTP/1.1	status:200	size:10000	referer:-	ua:Agent/5.0
+host:10.1.0.1	ident:-	user:-	time:[18/Dec/2013:06:25:01 +0900]	req:GET /path2 HTTP/1.1	status:200	size:20924	referer:-	ua:Agent/5.0
+host:10.0.0.1	ident:-	user:-	time:[18/Dec/2013:06:25:02 +0900]	req:GET /path3 HTTP/1.1	status:200	size:10000	referer:-	ua:Agent/5.0
+host:10.0.0.1	ident:-	user:-	time:[18/Dec/2013:06:25:06 +0900]	req:GET /path4 HTTP/1.1	status:200	size:10000	referer:-	ua:Agent/5.0

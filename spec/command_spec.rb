@@ -18,7 +18,7 @@ Usage: rspec [options]
     -i SECONDS                       Specify maximum interval seconds
     -f CONFFILE                      Specify configuration file
 EOS
-        capture_stdout {
+        test {
           begin
             DetectHttpAttack.main ["-h"]
           rescue SystemExit => e
@@ -68,6 +68,29 @@ EOS
         test(fixture_file) {
           DetectHttpAttack.main ["-s", "3", "-i", "4"]
         }.should eq(output)
+      end
+    end
+
+    context 'when args specified -n -s 3 -i 4' do
+      it "detect and notify attack minimum 3 times for each interval within 4 sec." do
+        output = <<EOS
+\e[36m\e[1m10.0.0.1\e[0m\t\e[35m3\e[0m\t\e[32mAgent/5.0\e[0m
+2013-12-18T06:25:00+09:00\t200\t/path1\t-
+2013-12-18T06:25:02+09:00\t200\t/path3\t-
+2013-12-18T06:25:06+09:00\t200\t/path4\t-
+
+EOS
+        outerr = <<EOS
+\e[31m\e[1m10.0.0.1\e[0m\t\e[33m\e[1m3\e[0m\tAgent/5.0
+2013-12-18T06:25:06+09:00\t200\t/path4\t-
+
+EOS
+        stdout, stderr = test_with_err(fixture_file) {
+          DetectHttpAttack.main ["-n", "-s", "3", "-i", "4"]
+        }
+
+        stdout.should eq(output)
+        stderr.should eq(outerr)
       end
     end
 

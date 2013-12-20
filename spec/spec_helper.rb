@@ -7,14 +7,31 @@ SimpleCov.start
 
 module Helpers
 
-def test(file_path)
-  result = nil
+def test(file_path=nil)
+  cap_out = nil
+  if file_path
+    file_stdin(file_path) {
+      cap_out, cap_err = capture_stdout {
+        yield
+      }
+    }
+  else
+    cap_out, cap_err = capture_stdout {
+      yield
+    }
+  end
+  cap_out
+end
+
+def test_with_err(file_path)
+  cap_out = nil
+  cap_err = nil
   file_stdin(file_path) {
-    result = capture_stdout {
+    cap_out, cap_err = capture_stdout {
       yield
     }
   }
-  result
+  return cap_out, cap_err
 end
 
 def file_stdin(file_path)
@@ -28,14 +45,17 @@ def file_stdin(file_path)
 end
 
 def capture_stdout(&block)
-  original_stdout = $stdout
-  $stdout = captured_stdout = StringIO.new
+  org_stdout = $stdout
+  org_stderr = $stderr
+  $stdout = cap_stdout = StringIO.new
+  $stderr = cap_stderr = StringIO.new
   begin
     yield
   ensure
-    $stdout = original_stdout
+    $stdout = org_stdout
+    $stderr = org_stderr
   end
-  captured_stdout.string
+  return cap_stdout.string, cap_stderr.string
 end
 
 end

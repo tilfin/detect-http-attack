@@ -1,5 +1,6 @@
 Detect HTTP attack
 ==================
+[![Build Status](https://travis-ci.org/tilfin/detect-http-attack.png?branch=master)](https://travis-ci.org/tilfin/detect-http-attack) [![Coverage Status](https://coveralls.io/repos/tilfin/detect-http-attack/badge.png?branch=master)](https://coveralls.io/r/tilfin/detect-http-attack?branch=master)
 
 It is a detecting attack tool for HTTP server such as Apache and Nginx.
 Analyzing access logs, output formated text as results.

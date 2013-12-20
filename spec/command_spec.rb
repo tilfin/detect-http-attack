@@ -99,7 +99,7 @@ EOS
       it 'should success without error' do
         output = <<EOS
 \e[36m\e[1m10.1.0.1\e[0m\t\e[35m1\e[0m\t\e[32mAgent/5.0\e[0m
-2013-12-18T06:25:01+09:00\t200\t/path2\t-
+20131218062501\t200\t/path2\t-
 
 EOS
         test(fixture_file) {

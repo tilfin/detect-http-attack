@@ -6,7 +6,7 @@ if ENV['TRAVIS'] == 'true'
   Coveralls.wear!
 else
   require 'simplecov'
-  SimpleCov.start
+  SimpleCov.start 'test_frameworks'
 end
 
 

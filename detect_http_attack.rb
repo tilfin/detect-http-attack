@@ -139,8 +139,8 @@ class Configuration
         name, value = line.split("=", 2)
         next unless value
 
-        value = eval %Q{"#{value}"}
-        @sets[name.to_sym] = value.chomp
+        value.chomp!
+        @sets[name.to_sym] = eval %Q{"#{value}"}
       }
     end
   end

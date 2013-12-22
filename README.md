@@ -95,13 +95,13 @@ Settings
 Excludes monitaring targets
 
 #### Host
-    exc_hosts=127.0.0.1,192.168.1.0
+    exc_hosts=127.0.0.1,localhost
 
-It is a equal comparison as string.
+It is a comma separated list of hosts.
 
 #### User-Agent
     exc_ua_match=bot|google
-    
+
 It is a regular expression with ignored case.
 
 #### Path

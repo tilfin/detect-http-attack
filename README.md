@@ -50,6 +50,8 @@ Edit the default configuration file (detect_http_attack.conf) or specify another
 
     $ ./detect-http-attack.rb -f another.conf < access_log
 
+Refer detect_http_attack.conf about the detail of template setting.
+
 ### Usage:
 
     $ ./detect-http-attack.rb --help
@@ -83,3 +85,31 @@ Detected attack result.
     2012-12-20T08:25:28+09:00       200     /blog/phpMyAdmin/scripts/setup.php      -
     2012-12-20T08:25:28+09:00       200     /wp/wp-content/plugins/wp-phpmyadmin/phpmyadmin/scripts/setup.php       -
     2012-12-20T08:25:28+09:00       200     /scripts/setup.php      -
+
+
+Settings
+--------
+
+### Excludes
+
+Excludes monitaring targets
+
+#### Host
+    exc_hosts=127.0.0.1,192.168.1.0
+
+It is a equal comparison as string.
+
+#### User-Agent
+    exc_ua_match=bot|google
+    
+It is a regular expression with ignored case.
+
+#### Path
+    exc_path_match=\.(html|js|css|jpg|gif|png|ico)$
+
+It is a regular expression.
+
+### Output Format
+
+#### DateTime
+    date_format=%Y-%m-%dT%H:%M:%S

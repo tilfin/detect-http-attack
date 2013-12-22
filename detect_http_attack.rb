@@ -157,10 +157,10 @@ class Template
   def initialize(head, body, foot, serr, date_format)
     @re_field = Regexp.new("\\$[a-z]+")
 
-    h = head || "$host\\t$count\\t$ua"
-    b = body || "$date\\t$path\\t$referer"
-    f = foot || ""
-    s = serr || "$host\\t$count\\t$ua\\n$date\\t$path\\t$referer"
+    h = head || "$host\t$count\t$ua\n"
+    b = body || "$date\t$path\t$referer\n"
+    f = foot || "\n"
+    s = serr || "$host\t$count\t$ua\n$date\t$path\t$referer\n"
 
     @head = parse_value(h)
     @body = parse_value(b)
@@ -170,7 +170,7 @@ class Template
     @date_format = date_format
   end
 
-  def  parse_value(value)
+  def parse_value(value)
     vals = Array.new
     str = value
 
